@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePinProtection } from "@/hooks/usePinProtection";
 import { PinDialog } from "@/components/PinDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const stats = [
   {
@@ -48,9 +49,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .maybeSingle()
         .then(({ data }) => {
           if (data) setUserProfile(data);
@@ -68,9 +69,7 @@ export default function Dashboard() {
 
   const handlePinVerify = async (pin: string) => {
     const success = await verifyPin(pin);
-    if (success) {
-      setShowBalance(true);
-    }
+    if (success) setShowBalance(true);
     return success;
   };
 
@@ -88,9 +87,11 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {userProfile?.full_name || user?.email || 'User'}
+              Welcome back, {userProfile?.full_name || user?.email || "User"}
             </h1>
-            <p className="text-white/80 text-lg">Here's what's happening with your accounts today</p>
+            <p className="text-white/80 text-lg">
+              Here's what's happening with your accounts today
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <Button
@@ -113,7 +114,10 @@ export default function Dashboard() {
         {stats.map((stat, index) => {
           const isBalanceCard = stat.title === "Current Balance";
           return (
-            <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+            <Card
+              key={index}
+              className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20"
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
@@ -125,7 +129,7 @@ export default function Dashboard() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold text-foreground">
-                    {isBalanceCard ? (showBalance ? stat.value : '••••••') : stat.value}
+                    {isBalanceCard ? (showBalance ? stat.value : "••••••") : stat.value}
                   </div>
                   {isBalanceCard && (
                     <Button
@@ -134,15 +138,23 @@ export default function Dashboard() {
                       className="h-8 w-8"
                       onClick={handleShowBalance}
                     >
-                      {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showBalance ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   )}
                 </div>
-                <p className={`text-xs ${
-                  stat.trend === "up" ? "text-success" : 
-                  stat.trend === "neutral" ? "text-muted-foreground" :
-                  "text-destructive"
-                } mt-1`}>
+                <p
+                  className={`text-xs ${
+                    stat.trend === "up"
+                      ? "text-success"
+                      : stat.trend === "neutral"
+                      ? "text-muted-foreground"
+                      : "text-destructive"
+                  } mt-1`}
+                >
                   {stat.change}
                 </p>
               </CardContent>
@@ -151,7 +163,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* User Information */}
+      {/* User Info */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-2">
           <CardHeader>
@@ -163,29 +175,39 @@ export default function Dashboard() {
           <CardContent className="space-y-4">
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Full Name</span>
-              <span className="font-medium">{userProfile?.full_name || 'N/A'}</span>
+              <span className="font-medium">{userProfile?.full_name || "N/A"}</span>
             </div>
+
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">{userProfile?.email || user?.email || 'N/A'}</span>
+              <span className="font-medium">{userProfile?.email || user?.email || "N/A"}</span>
             </div>
+
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Phone</span>
-              <span className="font-medium">{userProfile?.phone || 'N/A'}</span>
+              <span className="font-medium">{userProfile?.phone || "N/A"}</span>
             </div>
+
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Account Type</span>
-              <span className="font-medium">{userProfile?.account_type || 'Premium'}</span>
+              <span className="font-medium">{userProfile?.account_type || "Premium"}</span>
             </div>
+
             <div className="flex justify-between py-2">
               <span className="text-muted-foreground">Member Since</span>
               <span className="font-medium">
-                {userProfile?.member_since ? new Date(userProfile.member_since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
+                {userProfile?.member_since
+                  ? new Date(userProfile.member_since).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "N/A"}
               </span>
             </div>
           </CardContent>
         </Card>
 
+        {/* Quick Actions */}
         <Card className="border-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -193,37 +215,59 @@ export default function Dashboard() {
               Quick Actions
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-3">
-            <a href="/transaction" className="block p-3 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors cursor-pointer">
+
+            <Link
+              to="/Transaction"
+              className="block p-3 bg-muted hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors cursor-pointer"
+            >
               <div className="font-medium">Transfer Money</div>
               <div className="text-sm opacity-80">Send money to anyone</div>
-            </a>
-            <a href="/apply-loan" className="block p-3 bg-muted hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors cursor-pointer">
+            </Link>
+
+            <Link
+              to="/ApplyLoan"
+              className="block p-3 bg-muted hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors cursor-pointer"
+            >
               <div className="font-medium">Apply for Loan</div>
               <div className="text-sm opacity-80">Get instant approval</div>
-            </a>
-            <a href="/create-fd" className="block p-3 bg-muted hover:bg-success hover:text-white rounded-lg transition-colors cursor-pointer">
+            </Link>
+
+            <Link
+              to="/CreateFD"
+              className="block p-3 bg-muted hover:bg-success hover:text-white rounded-lg transition-colors cursor-pointer"
+            >
               <div className="font-medium">Create Fixed Deposit</div>
               <div className="text-sm opacity-80">Earn higher interest</div>
-            </a>
+            </Link>
+
           </CardContent>
         </Card>
       </div>
 
-      {/* Accounts Opened Sheet */}
+      {/* Google Sheet */}
       <Card className="border-2 shadow-lg">
         <CardHeader className="border-b border-border">
           <CardTitle className="text-xl">Accounts Opened</CardTitle>
-          <p className="text-sm text-muted-foreground mt-2">Real-time account opening data</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Real-time account opening data
+          </p>
         </CardHeader>
+
         <CardContent className="p-0">
-          <div className="w-full h-[600px] rounded-b-lg overflow-hidden bg-muted/20">
-            <iframe
-              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=0&single=true&widget=true&headers=false&chrome=false"
-              className="w-full h-full border-0"
-              title="Accounts Opened"
-              loading="lazy"
-            />
+          <div className="relative w-full h-[550px] overflow-hidden rounded-b-lg bg-muted/10">
+            <div
+              className="absolute top-0 left-0 origin-top-left"
+              style={{ transform: "scale(1.15)", width: "87%", height: "87%" }}
+            >
+              <iframe
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=0&single=true&widget=true&headers=false"
+                className="w-full h-full border-0"
+                title="Accounts Opened"
+                loading="lazy"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
