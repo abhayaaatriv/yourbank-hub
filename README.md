@@ -1,73 +1,102 @@
-# Welcome to your Lovable project
+# FairSync – Explainable AI Banking Agent
 
-## Project info
+**Transparent. Conversational. Ethical.**
 
-**URL**: https://lovable.dev/projects/2f74a6f6-c202-4efe-af0d-0e726902d541
+FairSync is YourBank’s AI agent designed to transform digital banking from form-based workflows into guided, explainable conversations. Powered by Gemini, Voiceflow, and a blockchain audit layer, FairSync delivers transparent, ethical, and user-controlled banking.
 
-## How can I edit this code?
+## Overview
 
-There are several ways of editing your application.
+FairSync solves the trust gap in modern banking by explaining every AI-driven decision in clear natural language.
+It supports both chat and voice banking, manages FD/loan workflows, and anchors all reasoning on a blockchain-based audit trail.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2f74a6f6-c202-4efe-af0d-0e726902d541) and start prompting.
+## Features
 
-Changes made via Lovable will be committed automatically to this repo.
+* Conversational FD, loan, and account services
+* Real-time financial simulations
+* OTP authentication via Node.js + Twilio
+* Voice banking with Voiceflow + Twilio + Gemini
+* Explainable AI reasoning summaries
+* User-controlled data permissions
+* Blockchain-backed AI logs on Sepolia
+* IPFS-based document storage (Pinata)
+* Bias detection and transparent decision engine
 
-**Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Architecture Summary
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend
 
-Follow these steps:
+* React
+* TailwindCSS
+* Blockchain event listeners
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Backend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+* Node.js (OTP + orchestration)
+* Python Flask (AI reasoning + Gemini + Voiceflow integration)
 
-# Step 3: Install the necessary dependencies.
-npm i
+### AI Layer
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+* Gemini reasoning and simulations
+* Voiceflow conversational logic
+
+### Blockchain Layer
+
+* Solidity smart contract (Remix)
+* MetaMask admin verification
+* Sepolia testnet + Infura RPC
+* IPFS + Pinata for document storage
+
+
+## Blockchain Transparency Model
+
+* AI summary is hashed
+* Hash stored on-chain
+* React listens for contract events
+* Users can independently verify decisions
+* Documents stored on IPFS with immutable references
+
+## Voice Banking Pipeline
+
+* Twilio → voice-to-text
+* Voiceflow → flow orchestration
+* Gemini → intent + reasoning
+* OTP verification
+* All actions logged and hashed
+
+## Running the Project
+
+### 1. Clone the Repository
+
+```bash
+git clone <repo-url>
+cd <repo-folder>
 ```
 
-**Edit a file directly in GitHub**
+### 2. Start Python Backend
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+python3 explain.py
+# if needed
+pip install -r requirements.txt
+```
 
-**Use GitHub Codespaces**
+### 3. Start React Frontend
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm install
+npm start
+```
 
-## What technologies are used for this project?
+App runs at:
 
-This project is built with:
+```
+http://localhost:3000
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 4. System Overview
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/2f74a6f6-c202-4efe-af0d-0e726902d541) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+* `explain.py` runs AI and backend routes
+* React handles UI + blockchain interactions
+* Both must run simultaneously
