@@ -9,7 +9,16 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+
+  // ⭐ Add this block for Render
+  preview: {
+    allowedHosts: [
+      "yourbank-hub.onrender.com",   // your Render domain (frontend)
+    ],
+  },
+
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
