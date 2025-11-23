@@ -1,13 +1,20 @@
 import { MessageSquare, X, Send, Phone } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  meta?: {
+    intent?: string;
+    workflow_step?: string;
+    action?: string;
+    system_updates?: string[];
+  };
 }
 
 export function ChatBot() {
@@ -17,129 +24,187 @@ export function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  // Auto-scroll
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
+  // ---------------------------------------------
+  // SEND QUERY → FLASK BACKEND
+  // ---------------------------------------------
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = input.trim();
     setInput("");
+
     setMessages(prev => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
-    // Simulate AI response (in production, this would call the explain.py backend)
-    setTimeout(() => {
-      const response = `Thank you for your question about "${userMessage}". Our AI assistant is processing your request. In a production environment, this would connect to the explainable AI backend to provide detailed insights about banking decisions, loan approvals, and account operations. For immediate assistance, please call our toll-free number +1 (863) 281-4984.`;
-      
-      setMessages(prev => [...prev, { role: "assistant", content: response }]);
-      setIsLoading(false);
-    }, 1500);
+    try {
+      const res = await fetch("http://127.0.0.1:5000/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userMessage })
+      });
+
+      const data = await res.json();
+
+      const reply = {
+        role: "assistant" as const,
+        content: data.assistant_message || "I could not process your request.",
+        meta: {
+          intent: data.intent,
+          workflow_step: data.workflow_step,
+          action: data.action,
+          system_updates: data.system_updates
+        }
+      };
+
+      setMessages(prev => [...prev, reply]);
+    } catch (error) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Backend not reachable. Make sure explain.py is running."
+        }
+      ]);
+    }
+
+    setIsLoading(false);
   };
 
+  // ---------------------------------------------
   const handleCall = () => {
     window.location.href = "tel:+18632814984";
-    toast.success("Initiating call to +1 (863) 281-4984");
+    toast.success("Calling +1 (863) 281-4984...");
   };
 
   return (
     <>
-      {/* Chat button */}
+      {/* Floating Chat Button */}
       {!isOpen && (
-        <button
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.1 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group z-50"
+          className="fixed bottom-6 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center z-50"
         >
-          <MessageSquare className="h-6 w-6" />
-          <span className="absolute -top-12 right-0 bg-card text-card-foreground px-4 py-2 rounded-lg shadow-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            Ask YourBank Assistant
-          </span>
-        </button>
+          <MessageSquare className="h-7 w-7" />
+        </motion.button>
       )}
 
-      {/* Chat window */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-card rounded-2xl shadow-2xl flex flex-col z-50 border border-border animate-fade-in">
-          {/* Header */}
-          <div className="p-4 bg-gradient-primary text-white rounded-t-2xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <MessageSquare className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold">YourBank Assistant</h3>
-                <p className="text-xs opacity-90">AI-Powered Support</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleCall}
-                className="hover:bg-white/20 p-2 rounded-lg transition-colors"
-                title="Call us"
-              >
-                <Phone className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="hover:bg-white/20 p-2 rounded-lg transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                  </div>
+      {/* Chat Window */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-6 right-6 w-96 h-[600px] bg-card rounded-2xl shadow-2xl border border-border flex flex-col z-50"
+          >
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5" />
                 </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-2xl px-4 py-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div>
+                  <h3 className="font-semibold">YourBank Assistant</h3>
+                  <p className="text-xs opacity-80">
+                    {isLoading ? "Typing..." : "Online"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={handleCall} className="hover:bg-white/20 p-2 rounded-lg">
+                  <Phone className="h-5 w-5" />
+                </button>
+                <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-lg">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: msg.role === "user" ? 40 : -40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-4 rounded-2xl shadow ${
+                        msg.role === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{msg.content}</p>
+
+                      {/* Metadata */}
+                      {msg.meta?.workflow_step && (
+                        <p className="text-xs opacity-60 mt-2">
+                          Step: {msg.meta.workflow_step}
+                        </p>
+                      )}
+
+                      {msg.meta?.system_updates?.map((u, i) => (
+                        <div
+                          key={i}
+                          className="bg-blue-100 text-blue-700 text-xs mt-2 px-2 py-1 rounded-md"
+                        >
+                          {u}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 rounded-2xl px-4 py-3 flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                )}
+              </div>
+              <div ref={bottomRef} />
+            </ScrollArea>
 
-          {/* Input */}
-          <div className="p-4 border-t border-border">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder="Type your message..."
-                className="flex-1"
-                disabled={isLoading}
-              />
-              <Button onClick={handleSend} disabled={isLoading} size="icon">
-                <Send className="h-4 w-4" />
-              </Button>
+            {/* Input */}
+            <div className="p-4 border-t border-border">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="Type a message..."
+                  disabled={isLoading}
+                />
+                <Button onClick={handleSend} size="icon" disabled={isLoading}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                YourBank AI Assistant
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Powered by Explainable AI
-            </p>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
