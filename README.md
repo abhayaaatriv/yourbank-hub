@@ -100,3 +100,6 @@ http://localhost:3000
 * `explain.py` runs AI and backend routes
 * React handles UI + blockchain interactions
 * Both must run simultaneously
+
+### Note
+Must have MetaMask Wallet extension installed, If any issue in running file, raise an issue we shall look into it 
