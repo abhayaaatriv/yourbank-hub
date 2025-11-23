@@ -1,5 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, AlertTriangle, Clock, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, TrendingUp, AlertTriangle, Clock, Users, Eye, EyeOff, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePinProtection } from "@/hooks/usePinProtection";
+import { PinDialog } from "@/components/PinDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 const stats = [
   {
@@ -33,45 +39,116 @@ const stats = [
 ];
 
 export default function Dashboard() {
+  const { user, signOut } = useAuth();
+  const { isPinVerified, isVerifying, verifyPin } = usePinProtection();
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setUserProfile(data);
+        });
+    }
+  }, [user]);
+
+  const handleShowBalance = () => {
+    if (isPinVerified) {
+      setShowBalance(!showBalance);
+    } else {
+      setShowPinDialog(true);
+    }
+  };
+
+  const handlePinVerify = async (pin: string) => {
+    const success = await verifyPin(pin);
+    if (success) {
+      setShowBalance(true);
+    }
+    return success;
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
+      <PinDialog
+        open={showPinDialog}
+        onOpenChange={setShowPinDialog}
+        onVerify={handlePinVerify}
+        isVerifying={isVerifying}
+      />
+
       {/* Welcome Section */}
       <div className="gradient-hero text-white rounded-2xl p-8 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, John Doe</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {userProfile?.full_name || user?.email || 'User'}
+            </h1>
             <p className="text-white/80 text-lg">Here's what's happening with your accounts today</p>
           </div>
-          <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur">
-            <Users className="h-10 w-10" />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={signOut}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+            <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur">
+              <Users className="h-10 w-10" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <stat.icon className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <p className={`text-xs ${
-                stat.trend === "up" ? "text-success" : 
-                stat.trend === "neutral" ? "text-muted-foreground" :
-                "text-destructive"
-              } mt-1`}>
-                {stat.change}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat, index) => {
+          const isBalanceCard = stat.title === "Current Balance";
+          return (
+            <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <stat.icon className="h-5 w-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <div className="text-2xl font-bold text-foreground">
+                    {isBalanceCard ? (showBalance ? stat.value : '••••••') : stat.value}
+                  </div>
+                  {isBalanceCard && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleShowBalance}
+                    >
+                      {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
+                <p className={`text-xs ${
+                  stat.trend === "up" ? "text-success" : 
+                  stat.trend === "neutral" ? "text-muted-foreground" :
+                  "text-destructive"
+                } mt-1`}>
+                  {stat.change}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* User Information */}
@@ -86,23 +163,25 @@ export default function Dashboard() {
           <CardContent className="space-y-4">
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Full Name</span>
-              <span className="font-medium">John Doe</span>
+              <span className="font-medium">{userProfile?.full_name || 'N/A'}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">john.doe@example.com</span>
+              <span className="font-medium">{userProfile?.email || user?.email || 'N/A'}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Phone</span>
-              <span className="font-medium">+1 (555) 123-4567</span>
+              <span className="font-medium">{userProfile?.phone || 'N/A'}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">Account Type</span>
-              <span className="font-medium">Premium</span>
+              <span className="font-medium">{userProfile?.account_type || 'Premium'}</span>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-muted-foreground">Member Since</span>
-              <span className="font-medium">Jan 2023</span>
+              <span className="font-medium">
+                {userProfile?.member_since ? new Date(userProfile.member_since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -132,16 +211,18 @@ export default function Dashboard() {
       </div>
 
       {/* Accounts Opened Sheet */}
-      <Card className="border-2">
-        <CardHeader>
-          <CardTitle>Accounts Opened</CardTitle>
+      <Card className="border-2 shadow-lg">
+        <CardHeader className="border-b border-border">
+          <CardTitle className="text-xl">Accounts Opened</CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">Real-time account opening data</p>
         </CardHeader>
-        <CardContent>
-          <div className="w-full h-[600px] rounded-lg overflow-hidden border border-border">
+        <CardContent className="p-0">
+          <div className="w-full h-[600px] rounded-b-lg overflow-hidden bg-muted/20">
             <iframe
-              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=0&single=true&widget=true&headers=false"
-              className="w-full h-full"
+              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=0&single=true&widget=true&headers=false&chrome=false"
+              className="w-full h-full border-0"
               title="Accounts Opened"
+              loading="lazy"
             />
           </div>
         </CardContent>
