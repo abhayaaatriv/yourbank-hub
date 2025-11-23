@@ -20,6 +20,7 @@ const menuItems = [
   { title: "Apply for Loan", url: "/apply-loan", icon: TrendingUp },
   { title: "Create FD", url: "/create-fd", icon: FileText },
   { title: "Apply for Card", url: "/apply-card", icon: CreditCard },
+  { title: "Admin", url: "/admin", icon: CreditCard },
 ];
 
 export function BankSidebar() {
