@@ -16,7 +16,7 @@ export default function AILogs() {
         <CardContent className="p-0">
           <div className="w-full h-[700px] rounded-b-lg overflow-hidden bg-muted/20">
             <iframe
-              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=0&single=true&widget=true&headers=false&chrome=false"
+              src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTTcRZdOZ6J4cd0Z-rO_T9TA5z-QrYFnAU_q-_d24sEgOCms_VZFH-JGzEnOVaGEpCFBmVfMH_k4TdG/pubhtml?gid=1519206664&amp;single=true&amp;widget=true&amp;headers=false"
               className="w-full h-full border-0"
               title="AI Logs"
               loading="lazy"
