@@ -55,6 +55,9 @@ It addresses the issues of
 * IPFS + Pinata for document storage
 
 ## Workflow
+<p align="center">
+  <img src="workflow.svg">
+</p>
 
 ## Blockchain Transparency Model
 
