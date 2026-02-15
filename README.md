@@ -8,7 +8,13 @@ FairSync is YourBank’s AI agent designed to transform digital banking from for
 
 FairSync solves the trust gap in modern banking by explaining every AI-driven decision in clear natural language.
 It supports both chat and voice banking, manages FD/loan workflows, and anchors all reasoning on a blockchain-based audit trail.
-
+It addresses the issues of 
+- Black Box behaviour of legacy banking systems where users don't understand why something was rejected.
+- Lack of transparency in automated financial decisions leading to less trust.
+- Complex Workflows as Form-based processes are tedious and error-prone.
+- No immutable trail of AI reasoning leading to audit challenges.
+- Limited support for voice-based banking causing a wide accessibility gap.
+- Hidden biases in credit scoring and risk assessment
 
 ## Features
 
@@ -45,9 +51,10 @@ It supports both chat and voice banking, manages FD/loan workflows, and anchors 
 
 * Solidity smart contract (Remix)
 * MetaMask admin verification
-* Sepolia testnet + Infura RPC
+* Ethereum Sepolia testnet + Infura RPC
 * IPFS + Pinata for document storage
 
+## Workflow
 
 ## Blockchain Transparency Model
 
