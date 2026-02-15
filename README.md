@@ -56,7 +56,7 @@ It addresses the issues of
 
 ## Workflow
 <p align="center">
-  <img src="workflowwhite.svg" width="100%">
+  <img src="workflow2.svg">
 </p>
 
 ## Blockchain Transparency Model
