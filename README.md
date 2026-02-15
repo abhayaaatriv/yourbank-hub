@@ -8,7 +8,13 @@ FairSync is YourBank’s AI agent designed to transform digital banking from for
 
 FairSync solves the trust gap in modern banking by explaining every AI-driven decision in clear natural language.
 It supports both chat and voice banking, manages FD/loan workflows, and anchors all reasoning on a blockchain-based audit trail.
-
+It addresses the issues of
+- Black Box behaviour of legacy banking systems where users don't understand why something was rejected.
+- Lack of transparency in automated financial decisions leading to less trust.
+- Complex Workflows as Form-based processes are tedious and error-prone.
+- No immutable trail of AI reasoning leading to audit challenges.
+- Limited support for voice-based banking causing a wide accessibility gap.
+- Hidden biases in credit scoring and risk assessment
 
 ## Features
 
@@ -45,10 +51,50 @@ It supports both chat and voice banking, manages FD/loan workflows, and anchors 
 
 * Solidity smart contract (Remix)
 * MetaMask admin verification
-* Sepolia testnet + Infura RPC
+* Ethereum Sepolia testnet + Infura RPC
 * IPFS + Pinata for document storage
 
+## Workflow
+```mermaid
+flowchart TD
 
+%% -------- USER & AI FLOW --------
+A[Start: User accesses YourBank] --> B[User Authentication<br/>Login + OTP via Twilio]
+B --> C[FairSync AI Agent<br/>Chat / Voice Request]
+C --> D[AI Intent Recognition<br/>Gemini + Voiceflow]
+D --> E[Clarifying Questions<br/>Income, Amount, Risk]
+E --> F[Dynamic Financial Simulation]
+
+%% -------- SENSITIVE ACTION --------
+F --> G{Sensitive Action?}
+
+G -- Yes --> H[OTP Re-verification]
+G -- No --> I[Continue]
+H --> I
+
+%% -------- AI DECISION ENGINE --------
+I --> J[AI Decision / Recommendation]
+J --> K[Explainable Reasoning]
+K --> L[Bias & Fairness Check]
+L --> M[Hash Decision Summary]
+
+%% -------- DOCUMENT HANDLING --------
+M --> N{Documents Involved?}
+
+N -- Yes --> O[Upload to IPFS (Pinata)]
+O --> P[Store Hash on Blockchain]
+P --> Q[Admin Verification (MetaMask)]
+Q --> R[Continue]
+
+N -- No --> R
+
+%% -------- BLOCKCHAIN FINALIZATION --------
+R --> S[Hash stored on Ethereum Sepolia Smart Contract]
+S --> T[Blockchain Event Listener]
+T --> U[Final Result + Transparent Explanation]
+U --> V[User Consent & Data Control]
+V --> W[End: Tamper-proof Record Complete]
+```
 ## Blockchain Transparency Model
 
 * AI summary is hashed
