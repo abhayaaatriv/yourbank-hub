@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { BankSidebar } from "@/components/BankSidebar";
 import { ChatBot } from "@/components/ChatBot";
+import { AIAgent } from "@/components/AIAgent";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
@@ -50,6 +51,7 @@ const App = () => (
                       </main>
                     </div>
                     <ChatBot />
+                    <AIAgent apiKey={import.meta.env.VITE_OPENAI_API_KEY} />
                   </SidebarProvider>
                 </ProtectedRoute>
               }
