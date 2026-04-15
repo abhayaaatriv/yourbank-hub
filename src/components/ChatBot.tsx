@@ -5,16 +5,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { BankingAgent } from "@/lib/agent/orchestrator";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-  meta?: {
-    intent?: string;
-    workflow_step?: string;
-    action?: string;
-    system_updates?: string[];
-  };
 }
 
 export function ChatBot() {
@@ -25,75 +20,56 @@ export function ChatBot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const agentRef = useRef<BankingAgent | null>(null);
+
+  // Initialize Gemini agent
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    if (apiKey) {
+      agentRef.current = new BankingAgent(apiKey);
+    }
+  }, []);
 
   // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // ---------------------------------------------
-  // SEND QUERY → FLASK BACKEND
-  // ---------------------------------------------
+  // Send message to Gemini
   const handleSend = async () => {
-  if (!input.trim()) return;
+    if (!input.trim() || !agentRef.current) return;
 
-  const userMessage = input.trim();
-  setInput("");
+    const userMessage = input.trim();
+    setInput("");
 
-  setMessages(prev => [...prev, { role: "user", content: userMessage }]);
-  setIsLoading(true);
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setIsLoading(true);
 
-  try {
-    const res = await fetch(
-      "https://general-runtime.voiceflow.com/state/user/web-abhaya-1/interact",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": "VF.DM.691ccd59d6d91caad66442a0.vOnPQyuTpWM8JRRN",
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          action: {
-            type: "text",
-            payload: userMessage
-          }
-        })
-      }
-    );
+    try {
+      const response = await agentRef.current.runTask(userMessage, () => {
+        // Optional: log callback for tracking agent steps
+      });
+      
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response || "I couldn't generate a response. Please try again."
+        }
+      ]);
+    } catch (error) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again."
+        }
+      ]);
+      console.error("[v0] Gemini error:", error);
+    }
 
-    const data = await res.json();
-
-    // Voiceflow returns an array of responses
-    const textReplies: string[] = [];
-
-    data.forEach((block: any) => {
-      if (block.type === "text") {
-        textReplies.push(block.payload.message);
-      }
-    });
-
-    const finalReply = textReplies.join("\n");
-
-    setMessages(prev => [
-      ...prev,
-      {
-        role: "assistant",
-        content: finalReply || "No response from Voiceflow."
-      }
-    ]);
-  } catch (error) {
-    setMessages(prev => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "Voiceflow API not reachable. Check your key."
-      }
-    ]);
-  }
-
-  setIsLoading(false);
-};
+    setIsLoading(false);
+  };
 
   // ---------------------------------------------
   const handleCall = () => {
