@@ -51,7 +51,7 @@ const App = () => (
                       </main>
                     </div>
                     <ChatBot />
-                    <AIAgent apiKey={import.meta.env.VITE_OPENAI_API_KEY} />
+                    <AIAgent apiKey={import.meta.env.VITE_GOOGLE_API_KEY} />
                   </SidebarProvider>
                 </ProtectedRoute>
               }

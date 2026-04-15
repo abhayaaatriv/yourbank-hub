@@ -1,11 +1,15 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
+interface MockUser {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: MockUser | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -23,67 +27,84 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Only do synchronous updates here
-      if (event === 'SIGNED_IN' && session) {
-        setTimeout(() => {
-          navigate('/');
-        }, 0);
+    // Check for stored user in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('user');
       }
-    });
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    }
+    setLoading(false);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      // Mock validation - accept any email/password combination for demo
+      if (!email || !password) {
+        return { error: { message: 'Email and password are required' } };
+      }
+
+      // Create mock user
+      const mockUser: MockUser = {
+        id: `user_${Date.now()}`,
+        email,
+        fullName: email.split('@')[0],
+        phone: '+1 234 567 8900',
+      };
+
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      // Navigate after state update
+      setTimeout(() => navigate('/'), 0);
+      
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Sign in failed' } };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-          phone: phone,
-        },
-      },
-    });
-    return { error };
+    try {
+      if (!email || !password || !fullName || !phone) {
+        return { error: { message: 'All fields are required' } };
+      }
+
+      // Create mock user
+      const mockUser: MockUser = {
+        id: `user_${Date.now()}`,
+        email,
+        fullName,
+        phone,
+      };
+
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      // Navigate after state update
+      setTimeout(() => navigate('/'), 0);
+      
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Sign up failed' } };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setUser(null);
+    localStorage.removeItem('user');
     navigate('/auth');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );

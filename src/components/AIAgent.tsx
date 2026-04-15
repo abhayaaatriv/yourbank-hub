@@ -17,9 +17,9 @@ export const AIAgent: React.FC<AIAgentProps> = ({ apiKey }) => {
 
   // Initialize agent
   useEffect(() => {
-    const key = apiKey || process.env.REACT_APP_OPENAI_API_KEY;
+    const key = apiKey || import.meta.env.VITE_GOOGLE_API_KEY;
     if (!key) {
-      setError('OpenAI API key not configured. Set REACT_APP_OPENAI_API_KEY in .env');
+      setError('Google API key not configured. Set VITE_GOOGLE_API_KEY in .env');
       return;
     }
     agentRef.current = new BankingAgent(key);
