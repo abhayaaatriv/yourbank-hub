@@ -47,7 +47,7 @@ export function ChatBot() {
 
     try {
       const response = await agentRef.current.runTask(userMessage, () => {
-        // Optional: log callback for tracking agent steps
+        // Log callback for tracking agent steps
       });
       
       setMessages(prev => [
@@ -62,10 +62,9 @@ export function ChatBot() {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error. Please try again."
+          content: `Error: ${error instanceof Error ? error.message : "Unknown error"}`
         }
       ]);
-      console.error("[v0] Gemini error:", error);
     }
 
     setIsLoading(false);

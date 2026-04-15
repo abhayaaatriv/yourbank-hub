@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePinProtection } from "@/hooks/usePinProtection";
 import { PinDialog } from "@/components/PinDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { WalletConnect } from "@/components/WalletConnect";
 import { Link } from "react-router-dom";
 
 const stats = [
@@ -47,15 +47,15 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
+    // Mock user profile from auth context
     if (user) {
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setUserProfile(data);
-        });
+      setUserProfile({
+        full_name: user.fullName || "User",
+        email: user.email,
+        phone: user.phone || "+1 234 567 8900",
+        account_type: "Premium",
+        member_since: new Date().toISOString(),
+      });
     }
   }, [user]);
 
@@ -94,6 +94,9 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <div className="bg-white/10 backdrop-blur rounded-lg p-2">
+              <WalletConnect />
+            </div>
             <Button
               variant="outline"
               size="icon"
